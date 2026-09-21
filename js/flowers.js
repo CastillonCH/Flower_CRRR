@@ -179,26 +179,27 @@ const CosmicFlowers = (() => {
     ctx.beginPath(); ctx.arc(0, -14, 34, 0, TAU); ctx.fill();
     ctx.globalAlpha = 1;
 
-    // tallo
+    // tallo — un poco más largo que antes, para que se note bien entre
+    // el follaje y la flor en vez de quedar como un tallito corto
     ctx.strokeStyle = '#3f6b3f';
     ctx.lineWidth = 2.2;
     ctx.lineCap = 'round';
     ctx.beginPath();
-    ctx.moveTo(0, 34);
-    ctx.bezierCurveTo(-1, 22, -1.4, 12, 0, 2);
+    ctx.moveTo(0, 48);
+    ctx.bezierCurveTo(-1.3, 32, -1.8, 14, 0, 2);
     ctx.stroke();
 
-    // hojas
+    // hojas — un poco más grandes, repartidas a lo largo del tallo nuevo
     ctx.fillStyle = '#4a7a48';
     ctx.beginPath();
-    ctx.moveTo(0, 24);
-    ctx.bezierCurveTo(-6, 20, -9, 23, -11, 19);
-    ctx.bezierCurveTo(-6, 18, -3, 20, 0, 20);
+    ctx.moveTo(0, 35);
+    ctx.bezierCurveTo(-7, 30, -10.5, 34, -13, 28);
+    ctx.bezierCurveTo(-7, 27, -3.5, 30, 0, 30);
     ctx.fill();
     ctx.beginPath();
-    ctx.moveTo(0, 14);
-    ctx.bezierCurveTo(6, 10, 9, 13, 11, 9);
-    ctx.bezierCurveTo(6, 8, 3, 10, 0, 10);
+    ctx.moveTo(0, 18);
+    ctx.bezierCurveTo(7, 13, 10.5, 17, 13, 11);
+    ctx.bezierCurveTo(7, 10, 3.5, 13, 0, 13);
     ctx.fill();
 
     // pétalos — mismo Path2D reutilizado, sólo rotado por pétalo

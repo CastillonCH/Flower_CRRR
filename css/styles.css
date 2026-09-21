@@ -227,15 +227,17 @@ body{
   position:fixed;
   inset:0;
   z-index:20;
-  background:radial-gradient(circle at 50% 45%, #fffaf0 0%, var(--flash) 100%);
+  background:radial-gradient(circle at 50% 45%, #fdf3d9 0%, var(--flash) 100%);
   opacity:0;
   pointer-events:none;
 }
-#flash.fire{animation:flash 2.6s ease-in-out forwards}
+/* nunca al 100% de opacidad: un destello totalmente opaco encandila —
+   se deja ver siempre un dejo del fondo detrás, y el pico dura menos */
+#flash.fire{animation:flash 2.4s ease-in-out forwards}
 @keyframes flash{
   0%{opacity:0}
-  30%{opacity:1}
-  55%{opacity:1}
+  28%{opacity:.82}
+  42%{opacity:.82}
   100%{opacity:0}
 }
 
@@ -324,7 +326,13 @@ body{
 .frame-bottom span{display:inline-block; transition:opacity .4s ease, transform .4s ease}
 .frame-bottom span.swap{opacity:0; transform:translateY(4px)}
 
-/* transición suave entre escenas: un respiro muy breve, no un corte seco */
+/* transición suave entre escenas: un respiro apenas perceptible, no un
+   parpadeo a negro. Antes la duración de la transición (.5s) era más
+   larga que el tiempo que la clase "on" quedaba activa (.26s desde JS),
+   así que nunca llegaba a completarse y se revertía a mitad de camino —
+   eso se veía como un parpadeo en vez de un fundido suave. Ahora ambos
+   tiempos están sincronizados (ver chapter() en main.js) y el pico de
+   opacidad es mucho más sutil. */
 #curtain{
   position:fixed;
   inset:0;
@@ -332,9 +340,28 @@ body{
   pointer-events:none;
   background:var(--void);
   opacity:0;
-  transition:opacity .5s ease;
+  transition:opacity .3s ease;
 }
-#curtain.on{opacity:.55}
+#curtain.on{opacity:.14}
+
+/* firma de la escena final (eyebrow + ∞ + botón de reinicio): en vez de
+   colgar del bloque de texto de arriba (su posición final dependería de
+   cuántas líneas ocupara ese texto, y a veces terminaba cayendo sobre
+   el planeta), vive fija cerca del borde inferior — igual que el
+   indicador de capítulo — así nunca puede chocar con el planeta sin
+   importar el tamaño de pantalla o el largo del texto. */
+#finale{
+  position:fixed;
+  left:0; right:0;
+  bottom:calc(env(safe-area-inset-bottom,0px) + 76px);
+  z-index:11;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  gap:8px;
+  pointer-events:none;
+}
+#finale:empty{display:none}
 
 .eyebrow{
   font-family:var(--sans);

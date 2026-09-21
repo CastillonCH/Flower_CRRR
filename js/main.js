@@ -11,6 +11,7 @@ const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = s => document.querySelector(s);
 const stage = $('#stage');
 const ui = $('#ui');
+const finale = $('#finale');
 const ftop = $('#ftop'), fbot = $('#fbot');
 const chapNum = $('#chapNum'), chapName = $('#chapName');
 const wish = $('#wish'), cosmos = $('#cosmos'), curtain = $('#curtain');
@@ -56,44 +57,48 @@ addEventListener('resize', handleResize);
 // transición de entrada: toda la experiencia aparece desde opacity:0
 requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('in')));
 
-/* ---------- AUDIO ambiental (generado, sutil) ---------- */
-let actx = null, master = null, audioReady = false, audioMuted = true;
+/* ---------- AUDIO: la canción del proyecto ---------- */
+const bgm = $('#bgm');
+bgm.volume = 0;
+const BGM_VOLUME = 0.55;
+let audioMuted = true;
 const audioBtn = $('#audio'), aX1 = $('#audio-x1'), aX2 = $('#audio-x2');
-function initAudio() {
-  if (audioReady) return;
-  try {
-    actx = new (window.AudioContext || window.webkitAudioContext)();
-    master = actx.createGain(); master.gain.value = 0; master.connect(actx.destination);
-    const freqs = [110, 164.81, 220, 277.18];
-    freqs.forEach((f, i) => {
-      const o = actx.createOscillator(), g = actx.createGain();
-      o.type = i % 2 ? 'sine' : 'triangle'; o.frequency.value = f;
-      g.gain.value = 0.22 / (i + 1);
-      const lfo = actx.createOscillator(), lg = actx.createGain();
-      lfo.frequency.value = 0.05 + i * 0.02; lg.gain.value = 0.08;
-      lfo.connect(lg); lg.connect(g.gain); lfo.start();
-      o.connect(g); g.connect(master); o.start();
-    });
-    audioReady = true;
-  } catch (e) {}
+
+// pequeño fundido de volumen (HTMLMediaElement no trae uno propio).
+// El valor de "volume" DEBE quedar siempre dentro de [0,1] — asignar
+// algo fuera de rango lanza una excepción y corta el fundido a medias
+// (así se descubrió: un fundido interrumpido por otro sin recortar
+// bien "t" podía calcular un valor momentáneamente fuera de rango).
+let fadeRaf = null;
+function fadeVolume(target, ms, onDone) {
+  if (fadeRaf) cancelAnimationFrame(fadeRaf);
+  const start = bgm.volume, t0 = performance.now();
+  function step(now) {
+    const t = Math.max(0, Math.min(1, (now - t0) / ms));
+    bgm.volume = Math.max(0, Math.min(1, start + (target - start) * t));
+    if (t < 1) { fadeRaf = requestAnimationFrame(step); }
+    else { fadeRaf = null; if (onDone) onDone(); }
+  }
+  fadeRaf = requestAnimationFrame(step);
 }
+
 function setMuted(m) {
   audioMuted = m;
   audioBtn.classList.toggle('muted', m);
   aX1.style.display = m ? 'block' : 'none';
   aX2.style.display = m ? 'block' : 'none';
-  if (audioReady && actx) {
-    const now = actx.currentTime;
-    master.gain.cancelScheduledValues(now);
-    master.gain.linearRampToValueAtTime(m ? 0 : 0.16, now + 1.2);
-    if (!m && actx.state === 'suspended') actx.resume();
+  if (m) {
+    fadeVolume(0, 900, () => bgm.pause());
+  } else {
+    bgm.play().catch(() => {}); // requiere gesto del usuario; este click lo es
+    fadeVolume(BGM_VOLUME, 900);
   }
 }
-audioBtn.addEventListener('click', () => { initAudio(); setMuted(!audioMuted); });
+audioBtn.addEventListener('click', () => setMuted(!audioMuted));
 setMuted(true);
-// ya no hay un botón de "empezar" que sirva de gesto para desbloquear el
-// audio del navegador: el toggle queda visible desde el principio para
-// que la persona lo active ella misma cuando quiera
+// el toggle queda visible desde el principio para que la persona active
+// la música ella misma cuando quiera (no hay ya un primer botón de
+// "empezar" del que colgarse para desbloquear el audio del navegador)
 audioBtn.classList.add('on');
 
 /* ---------- TYPEWRITER ---------- */
@@ -133,7 +138,7 @@ function chapter(num, name) {
     chapNum.textContent = num; chapName.textContent = name;
     chapNum.classList.remove('swap'); chapName.classList.remove('swap');
     curtain.classList.remove('on');
-  }, REDUCED ? 10 : 260);
+  }, REDUCED ? 10 : 300);
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -340,17 +345,23 @@ async function sceneTodo() {
 async function sceneFinal() {
   chapter('07', 'EL INFINITO');
   clearUI();
-  cosmos.style.transform = 'translate(-50%,-54%) scale(1.12)';
-  // todos los elementos de la escena se crean de una vez (invisibles
-  // los que aún no deben verse) para que #ui no cambie de altura en
-  // ningún momento — nada se desplaza mientras la escena avanza
+  // el acercamiento final se mantiene muy sutil (antes escalaba a 1.12 y
+  // subía el ancla a -54%, lo que hacía crecer el planeta lo bastante
+  // para meterse debajo del texto/firma de esta escena)
+  cosmos.style.transform = 'translate(-50%,-50%) scale(1.04)';
   const line = addEl('p', 'line big', '');
-  const eb = addEl('div', 'eyebrow', 'PARA ' + CONFIG.name.toUpperCase());
-  eb.style.marginTop = '4px';
-  const heart = addEl('div', 'line', '∞');
-  heart.style.cssText = 'font-family:var(--serif);font-style:italic;font-size:34px;color:var(--gold);opacity:0';
+
+  // eyebrow + símbolo + botón NO cuelgan del bloque de texto de arriba
+  // (#ui): viven en #finale, fijo cerca del borde inferior de la
+  // pantalla, así su posición nunca depende de cuántas líneas ocupe el
+  // texto ni puede terminar encima del planeta
+  finale.innerHTML = '';
+  const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = 'PARA ' + CONFIG.name.toUpperCase();
+  const heart = document.createElement('div');
+  heart.style.cssText = 'font-family:var(--serif);font-style:italic;font-size:30px;line-height:1;color:var(--gold);opacity:0';
+  heart.textContent = '∞';
   const rep = document.createElement('button'); rep.id = 'replay'; rep.textContent = 'VOLVER A EMPEZAR';
-  ui.appendChild(rep);
+  finale.append(eb, heart, rep);
   rep.addEventListener('click', () => location.reload());
 
   await typeInto(line, '…pero preferí regalarte un universo entero.', 52);
