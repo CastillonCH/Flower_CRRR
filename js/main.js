@@ -151,13 +151,14 @@ function heartPoints() {
   // característicos de un corazón — la hendidura en V arriba, un
   // hombro (el punto más ancho) a cada lado, y una punta definida abajo.
   const right = [
-    { x: 0, y: 10 },   // hendidura central, arriba
-    { x: 5, y: 14 },   // sube hacia el pico derecho
-    { x: 11, y: 12 },  // pico derecho
-    { x: 16, y: 6 },   // hombro derecho — el punto más ancho
-    { x: 14, y: -3 },  // baja por el costado derecho
-    { x: 9, y: -10 },  // se acerca a la punta
-    { x: 0, y: -15 },  // punta inferior
+    { x: 0, y: 9 },    // hendidura central, arriba
+    { x: 6, y: 15 },   // sube hacia el lóbulo derecho
+    { x: 13, y: 14 },  // cresta redondeada del lóbulo
+    { x: 18, y: 4 },   // hombro derecho — el punto más ancho
+    { x: 13, y: -8 },  // cintura: se curva hacia ADENTRO (lo que da
+                       // la silueta acorazonada, no de escudo/cometa)
+    { x: 7, y: -14 },  // se acerca a la punta
+    { x: 0, y: -19 },  // punta inferior
   ];
   const left = right.slice(1, -1).reverse().map(p => ({ x: -p.x, y: p.y }));
   return right.concat(left);
@@ -167,11 +168,10 @@ function layoutHeart() {
   const { pts, svgPts, lines } = currentHeart;
   const w = innerWidth, h = innerHeight;
   constel.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  // más pequeño que antes, y más arriba, para que el texto de la
-  // escena (que se centra verticalmente y puede ocupar dos líneas en
-  // pantallas anchas) quede siempre debajo del corazón, nunca encimado
-  const scale = Math.min(w, h) * 0.0075;
-  const cx = w / 2, cy = h * 0.30;
+  // compacto y desplazado hacia arriba, dejando un respiro claro antes
+  // del texto (que se centra verticalmente en la pantalla)
+  const scale = Math.min(w, h) * 0.007;
+  const cx = w / 2, cy = h * 0.26;
   pts.forEach((p, i) => {
     const X = cx + p.x * scale, Y = cy - p.y * scale;
     svgPts[i].sx = X; svgPts[i].sy = Y;
