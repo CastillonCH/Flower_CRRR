@@ -145,22 +145,33 @@ const wait = ms => new Promise(r => setTimeout(r, ms));
 /* ---------- CONSTELACIÓN CORAZÓN ---------- */
 let currentHeart = null;
 function heartPoints() {
-  const pts = []; const N = 15;
-  for (let k = 0; k < N; k++) {
-    const t = Math.PI - (k / (N - 1)) * 2 * Math.PI;
-    const x = 16 * Math.pow(Math.sin(t), 3);
-    const y = 13 * Math.cos(t) - 5 * Math.cos(2 * t) - 2 * Math.cos(3 * t) - Math.cos(4 * t);
-    pts.push({ x, y });
-  }
-  return pts;
+  // Vértices trazados a mano (no muestreados de una curva paramétrica):
+  // la mitad derecha se define explícitamente y la izquierda es su
+  // espejo exacto, para garantizar simetría perfecta y los ángulos
+  // característicos de un corazón — la hendidura en V arriba, un
+  // hombro (el punto más ancho) a cada lado, y una punta definida abajo.
+  const right = [
+    { x: 0, y: 10 },   // hendidura central, arriba
+    { x: 5, y: 14 },   // sube hacia el pico derecho
+    { x: 11, y: 12 },  // pico derecho
+    { x: 16, y: 6 },   // hombro derecho — el punto más ancho
+    { x: 14, y: -3 },  // baja por el costado derecho
+    { x: 9, y: -10 },  // se acerca a la punta
+    { x: 0, y: -15 },  // punta inferior
+  ];
+  const left = right.slice(1, -1).reverse().map(p => ({ x: -p.x, y: p.y }));
+  return right.concat(left);
 }
 function layoutHeart() {
   if (!currentHeart) return;
   const { pts, svgPts, lines } = currentHeart;
   const w = innerWidth, h = innerHeight;
   constel.setAttribute('viewBox', `0 0 ${w} ${h}`);
-  const scale = Math.min(w, h) * 0.020;
-  const cx = w / 2, cy = h * 0.40;
+  // más pequeño que antes, y más arriba, para que el texto de la
+  // escena (que se centra verticalmente y puede ocupar dos líneas en
+  // pantallas anchas) quede siempre debajo del corazón, nunca encimado
+  const scale = Math.min(w, h) * 0.0075;
+  const cx = w / 2, cy = h * 0.30;
   pts.forEach((p, i) => {
     const X = cx + p.x * scale, Y = cy - p.y * scale;
     svgPts[i].sx = X; svgPts[i].sy = Y;
