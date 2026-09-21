@@ -282,6 +282,17 @@ body{
   align-items:center;
   gap:22px;
 }
+/* #stage centra #ui en TODO el viewport por defecto — funciona bien
+   mientras no hay nada más en pantalla (La noche, El destello). Pero
+   en cuanto el planeta está a la vista, ese centrado ignora que el
+   planeta ya ocupa la mitad inferior, y el texto termina cayendo
+   encima de él. Para esas escenas, #ui se ancla en su propia franja
+   segura arriba del planeta, con el mismo espíritu de espacio
+   simétrico que ya tiene la constelación del corazón. */
+#ui.top{
+  align-self:flex-start;
+  margin-top:calc(env(safe-area-inset-top,0px) + 96px);
+}
 
 .frame-top{
   position:fixed;

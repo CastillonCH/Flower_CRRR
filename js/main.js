@@ -305,6 +305,10 @@ async function sceneDestello() {
 async function sceneLugar() {
   chapter('04', 'UN LUGAR PARA TI');
   clearUI();
+  // de aquí en adelante el planeta está a la vista, así que el texto
+  // se ancla en su propia franja arriba de él en vez de centrarse en
+  // todo el viewport (donde terminaría encimado sobre el planeta)
+  ui.classList.add('top');
   const line = addEl('p', 'line big', '');
   const b = makeButton('Continuar'); ui.appendChild(b);
   await wait(700);
