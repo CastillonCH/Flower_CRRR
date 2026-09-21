@@ -458,6 +458,69 @@ body{
 .ui-fade{animation:uiOut .9s ease forwards}
 @keyframes uiOut{to{opacity:0; transform:translateY(-12px)}}
 
+/* ---- pantalla de entrada ----
+   Los navegadores bloquean reproducir audio con sonido sin un gesto
+   real de la persona (click/tap). #gate existe para eso: cubre toda
+   la pantalla por encima de todo lo demás hasta que se presiona el
+   botón — ESE click es el gesto que desbloquea la música al instante,
+   sin él nunca sonaría sola al cargar la página. */
+#gate{
+  position:fixed;
+  inset:0;
+  z-index:60;
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:center;
+  gap:30px;
+  background:rgba(4,6,13,.4);
+  backdrop-filter:blur(3px);
+  -webkit-backdrop-filter:blur(3px);
+  transition:opacity .8s ease;
+}
+#gate.out{opacity:0; pointer-events:none}
+#gate .hint{
+  font-family:var(--sans);
+  font-weight:400;
+  letter-spacing:.42em;
+  font-size:13px;
+  color:var(--starlight);
+  text-indent:.42em;
+  text-align:center;
+  opacity:.92;
+}
+
+.gate-btn{
+  position:relative;
+  padding:16px 46px;
+  border:0;
+  background:transparent;
+  color:var(--starlight);
+  font-family:var(--sans);
+  font-weight:400;
+  letter-spacing:.22em;
+  font-size:13px;
+  text-indent:.22em;
+  cursor:pointer;
+  border-radius:40px;
+  transition:color .4s ease;
+}
+.gate-btn svg{position:absolute; inset:0; width:100%; height:100%; overflow:visible}
+.gate-btn ellipse{fill:none; stroke:rgba(243,236,221,.55); stroke-width:1}
+.gate-btn .glow{
+  stroke:var(--gold);
+  stroke-width:1.2;
+  opacity:0;
+  filter:drop-shadow(0 0 6px var(--gold));
+  transition:opacity .45s ease;
+}
+.gate-btn:hover{color:var(--gold)}
+.gate-btn:hover .glow{opacity:1}
+.gate-btn .label{position:relative; z-index:1; display:inline-flex; align-items:center; gap:9px}
+.gate-btn .spark{color:var(--gold); font-size:10px; opacity:.9; animation:sparkPulse 1.8s ease-in-out infinite}
+@keyframes sparkPulse{0%,100%{opacity:.5; transform:scale(.9)}50%{opacity:1; transform:scale(1.15)}}
+.gate-btn:focus-visible{outline:2px solid var(--gold); outline-offset:6px}
+
 @media (prefers-reduced-motion: reduce){
   *{animation-duration:.001ms !important; transition-duration:.2s !important}
 }

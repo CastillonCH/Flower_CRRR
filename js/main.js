@@ -382,4 +382,15 @@ async function run() {
   await sceneTodo();
   await sceneFinal();
 }
-run();
+
+// La historia arranca recién cuando la persona presiona "Comenzar": ese
+// click es un gesto de usuario real, así que ahí SÍ se puede arrancar la
+// música con sonido — sin este botón el navegador la bloquea siempre y
+// la experiencia empezaría en silencio.
+const gate = $('#gate'), enterBtn = $('#enterBtn');
+enterBtn.addEventListener('click', () => {
+  setMuted(false);
+  gate.classList.add('out');
+  setTimeout(() => gate.remove(), 850);
+  run();
+}, { once: true });

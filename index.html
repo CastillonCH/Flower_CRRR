@@ -47,6 +47,17 @@
       </svg>
     </button>
     <audio id="bgm" src="audio/pati.mp3" loop preload="auto"></audio>
+
+    <!-- Los navegadores bloquean reproducir audio con sonido sin un gesto
+         real de la persona. Este botón es ese gesto: al presionarlo arranca
+         la música al instante y da paso a la experiencia. -->
+    <div id="gate">
+      <div class="hint">UN UNIVERSO PARA TI</div>
+      <button id="enterBtn" class="gate-btn">
+        <svg viewBox="0 0 220 60"><ellipse cx="110" cy="30" rx="105" ry="26"/><ellipse class="glow" cx="110" cy="30" rx="105" ry="26"/></svg>
+        <span class="label">Comenzar<span class="spark">✦</span></span>
+      </button>
+    </div>
   </div>
 
   <script src="js/starfield.js"></script>
