@@ -195,33 +195,40 @@ function buildHeart() {
   currentHeart = { pts, svgPts, lines, dot, comet };
   layoutHeart();
 }
+const STAR_R = 2.6;
 async function drawHeart() {
   buildHeart();
   constel.classList.add('on');
   const { svgPts, lines, dot, comet } = currentHeart;
   for (let i = 0; i < svgPts.length; i++) {
-    svgPts[i].c.animate([{ opacity: 0, transform: 'scale(0)' }, { opacity: 1, transform: 'scale(1)' }],
-      { duration: 500, fill: 'forwards', easing: 'ease-out' });
-    await wait(REDUCED ? 10 : 90);
+    // las estrellas aparecen en su propio lugar (radio 0 → radio final).
+    // Ojo: NO usar `transform:scale()` aquí — en SVG el transform-origin
+    // por defecto es la esquina (0,0) del viewport, no el centro del
+    // círculo, así que escalar por transform hace que la estrella
+    // "se deslice" desde esa esquina en vez de aparecer en su sitio.
+    svgPts[i].c.animate([{ r: 0, opacity: 0 }, { r: STAR_R, opacity: 1 }],
+      { duration: 380, fill: 'forwards', easing: 'ease-out' });
+    await wait(REDUCED ? 10 : 70);
   }
-  await wait(200);
-  // un cometa recorre el contorno mientras se dibujan las líneas
-  comet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 300, fill: 'forwards' });
+  await wait(150);
+  // un cometa recorre el contorno mientras se dibujan las líneas, rápido
+  comet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' });
+  const LINE_MS = REDUCED ? 10 : 150;
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i]; ln.dataset.drawn = '1';
     const len = parseFloat(ln.style.strokeDasharray);
     const a = svgPts[i], b = svgPts[(i + 1) % svgPts.length];
     ln.animate([{ strokeDashoffset: len }, { strokeDashoffset: 0 }],
-      { duration: REDUCED ? 10 : 340, fill: 'forwards', easing: 'ease-in-out' });
+      { duration: LINE_MS, fill: 'forwards', easing: 'linear' });
     ln.style.strokeDashoffset = 0;
     if (!REDUCED) comet.animate([
       { cx: a.sx, cy: a.sy }, { cx: b.sx, cy: b.sy }
-    ], { duration: 340, fill: 'forwards', easing: 'ease-in-out' });
+    ], { duration: LINE_MS, fill: 'forwards', easing: 'linear' });
     comet.setAttribute('cx', b.sx); comet.setAttribute('cy', b.sy);
-    await wait(REDUCED ? 5 : 170);
+    await wait(REDUCED ? 5 : LINE_MS * .4);
   }
-  comet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 500, fill: 'forwards' });
-  dot.animate([{ opacity: 0 }, { opacity: .9 }], { duration: 800, fill: 'forwards' });
+  comet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
+  dot.animate([{ opacity: 0 }, { opacity: .9 }], { duration: 600, fill: 'forwards' });
 }
 function hideHeart() { constel.classList.remove('on'); }
 

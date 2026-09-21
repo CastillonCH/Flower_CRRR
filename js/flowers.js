@@ -14,8 +14,15 @@ const CosmicFlowers = (() => {
   const BLOOM_MS = 1500;
 
   let canvas, ctx, W = 0, H = 0, dpr = 1;
+  let boxW = 0, boxH = 0; // tamaño real de la caja del planeta (para %)
   let petalPath = null;
   let gradients = null;
+
+  // un <canvas> SIEMPRE recorta su contenido a sus propios límites (a
+  // diferencia de un SVG con overflow:visible), así que le damos un
+  // margen extra para que los pétalos que florecen hacia arriba del
+  // punto de anclaje no queden cortados justo en el borde del planeta
+  const PAD = 70;
 
   // ---- pool fijo: bloomBatch() reactiva slots existentes, nunca crea
   // elementos nuevos — así se elimina el lag progresivo de acumular
@@ -68,12 +75,16 @@ const CosmicFlowers = (() => {
     if (!canvas) return;
     dpr = Math.min(window.devicePixelRatio || 1, 2);
     const parent = canvas.parentElement;
-    W = parent ? parent.clientWidth : canvas.clientWidth;
-    H = parent ? parent.clientHeight : canvas.clientHeight;
+    boxW = parent ? parent.clientWidth : canvas.clientWidth;
+    boxH = parent ? parent.clientHeight : canvas.clientHeight;
+    W = boxW + PAD * 2;
+    H = boxH + PAD * 2;
     canvas.width = Math.round(W * dpr);
     canvas.height = Math.round(H * dpr);
     canvas.style.width = W + 'px';
     canvas.style.height = H + 'px';
+    canvas.style.left = -PAD + 'px';
+    canvas.style.top = -PAD + 'px';
     ctx.setTransform(1, 0, 0, 1, 0, 0);
     ctx.scale(dpr, dpr);
     buildStatic();
@@ -130,7 +141,7 @@ const CosmicFlowers = (() => {
   }
 
   function drawFlower(f) {
-    const px = f.x * W, py = f.y * H;
+    const px = f.x * boxW + PAD, py = f.y * boxH + PAD;
     const sway = REDUCED ? 0 : Math.sin(f.swayPhase) * 3;
     const scale = Math.max(0, f.baseScale * f.bloom);
     const bloomA = Math.min(1, Math.max(0, f.bloom));

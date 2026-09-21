@@ -163,13 +163,11 @@ body{
 }
 @keyframes planetSpin{to{transform:rotate(360deg)}}
 
-/* las flores se dibujan en canvas (js/flowers.js); el elemento sólo necesita
-   ocupar la caja del planeta y no interceptar el puntero */
+/* las flores se dibujan en canvas (js/flowers.js). Su tamaño/posición
+   los fija el propio módulo (con margen extra para que los pétalos que
+   florecen hacia arriba no queden recortados por el borde del canvas) */
 #flowersCanvas{
   position:absolute;
-  inset:0;
-  width:100%;
-  height:100%;
   z-index:4;
   pointer-events:none;
 }
