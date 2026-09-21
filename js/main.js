@@ -282,7 +282,7 @@ async function sceneNoche() {
   await wait(700);
   name.textContent = CONFIG.name + '…'; name.classList.add('in');
   await wait(1500);
-  await typeInto(line, 'quería recordarte lo especial que eres para mí. 💛', 40);
+  await typeInto(line, 'quiero recordarte cuánto te quiero y lo importante que eres para mí. ❤️', 40);
   await wait(2600);
   await fadeOutUI();
 }
@@ -299,9 +299,9 @@ async function sceneLuz() {
   const line2 = addEl('p', 'line big', '');
   drawHeart();
   await wait(600);
-  await typeInto(line1, 'Me alegra muchísimo tenerte en mi vida,', 55);
+  await typeInto(line1, 'A veces no puedo verte, pero aun así siempre estás presente en mi mente y en mi corazón.', 50);
   await wait(300);
-  await typeInto(line2, 'porque cuando estás, tu alegría tiene esa forma tan bonita de calmar y hacer que todo se sienta un poquito mejor.', 46);
+  await typeInto(line2, 'De alguna manera, te siento cerca todo el tiempo, porque pienso en ti incluso en los momentos más simples del día.', 45);
   // el corazón tarda ~5.6s en terminar de dibujarse desde que empezó;
   // se espera lo suficiente para que nunca se corte a mitad de trazo
   await wait(3000);
@@ -328,9 +328,11 @@ async function sceneLugar() {
   // todo el viewport (donde terminaría encimado sobre el planeta)
   ui.classList.remove('below-heart');
   ui.classList.add('top');
-  const [line] = addStack(1);
+  const [line1, line2] = addStack(2);
   await wait(700);
-  await typeInto(line, 'También quiero que sepas que admiro mucho tu forma de ser,', 55);
+  await typeInto(line1, 'Me encanta tomar tu mano y sentir esa calidez que transmites,', 50);
+  await wait(250);
+  await typeInto(line2, 'porque en ese pequeño gesto siento todo el cariño y el amor que nos tenemos.', 45);
   await wait(600);
   CosmicFlowers.bloomBatch('one');
   await wait(2600);
@@ -341,9 +343,9 @@ async function sceneFlorece() {
   chapter('05', 'LO QUE FLORECE');
   clearUI();
   const [line1, line2] = addStack(2);
-  await typeInto(line1, 'y, especialmente, lo increíble que eres cantando.', 55);
+  await typeInto(line1, 'Me gusta estar contigo, abrazarte, escucharte', 55);
   await wait(250);
-  await typeInto(line2, 'Tienes una voz tan armoniosa y bonita que da gusto escucharte.', 46);
+  await typeInto(line2, 'y compartir esos momentos que, poco a poco, se vuelven recuerdos que quiero guardar para siempre.', 44);
   await wait(400);
   CosmicFlowers.bloomBatch('few');
   await wait(3400);
@@ -354,12 +356,8 @@ async function sceneTodo() {
   chapter('06', 'TODO PARA TI');
   clearUI();
   Starfield.enableDust();
-  const [line1, line2, line3] = addStack(3);
-  await typeInto(line1, 'Me siento muy orgulloso de ti, de todo lo que eres,', 48);
-  await wait(220);
-  await typeInto(line2, 'de cada cosa que haces y de todo lo que has logrado,', 46);
-  await wait(220);
-  await typeInto(line3, 'porque sé que todavía te esperan muchísimas cosas buenas.', 46);
+  const [line1] = addStack(1);
+  await typeInto(line1, 'Te quiero muchísimo y deseo que esto que tenemos siga creciendo.', 50);
   await wait(400);
   CosmicFlowers.bloomBatch('many');
   await wait(3800);
@@ -373,31 +371,34 @@ async function sceneFinal() {
   // subía el ancla a -54%, lo que hacía crecer el planeta lo bastante
   // para meterse debajo del texto/firma de esta escena)
   cosmos.style.transform = 'translate(-50%,-50%) scale(1.04)';
-  // sólo dos frases arriba (el bloque de #ui, cerca del planeta): la
-  // tercera y más larga vive abajo, en la zona segura de #finale — tres
-  // frases completas ahí arriba llegaban a tocar el borde del planeta
-  const [line1, line2] = addStack(2);
+  // sólo una frase corta arriba (el bloque de #ui, junto al borde del
+  // planeta — el de arriba SÍ es un límite real, ahí están las flores).
+  // El resto del cierre vive abajo, en #finale: ese lado nunca da
+  // problema porque el planeta se angosta hasta un punto en su base.
+  const [line1] = addStack(1);
 
   // el cierre + eyebrow + símbolo + botón NO cuelgan del bloque de texto
   // de arriba (#ui): viven en #finale, fijo cerca del borde inferior de
   // la pantalla, así su posición nunca depende de cuántas líneas ocupe
   // el texto ni puede terminar encima del planeta
   finale.innerHTML = '';
-  const closing = document.createElement('p'); closing.className = 'closing';
+  const closingA = document.createElement('p'); closingA.className = 'closing';
+  const closingB = document.createElement('p'); closingB.className = 'closing';
   const eb = document.createElement('div'); eb.className = 'eyebrow'; eb.textContent = 'PARA ' + CONFIG.name.toUpperCase();
   const heart = document.createElement('div');
   heart.style.cssText = 'font-family:var(--serif);font-style:italic;font-size:30px;line-height:1;color:var(--gold);opacity:0';
   heart.textContent = '∞';
   const rep = document.createElement('button'); rep.id = 'replay'; rep.textContent = 'VOLVER A EMPEZAR';
-  finale.append(closing, eb, heart, rep);
+  finale.append(closingA, closingB, eb, heart, rep);
   rep.addEventListener('click', () => location.reload());
 
-  await typeInto(line1, 'Y nunca olvides algo: no estás sola.', 52);
-  await wait(300);
-  await typeInto(line2, 'En los días buenos y en los no tan buenos, cuentas conmigo.', 46);
+  await typeInto(line1, 'Quiero compartir contigo muchos momentos más,', 52);
   await wait(700);
-  closing.textContent = 'Siempre voy a estar aquí para apoyarte y alegrarme por cada uno de tus logros. 🌻💛';
-  closing.classList.add('in');
+  closingA.textContent = 'acompañarte en tus sueños, verte cumplir todo lo que te propongas y también construir un futuro juntos.';
+  closingA.classList.add('in');
+  await wait(900);
+  closingB.textContent = 'No sé exactamente qué nos espera más adelante, pero sí sé que quiero seguir caminando a tu lado. 🌻❤️';
+  closingB.classList.add('in');
   await wait(1400);
   eb.classList.add('in');
   await wait(1000);
