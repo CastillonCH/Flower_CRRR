@@ -96,11 +96,29 @@ const CosmicFlowers = (() => {
     resize();
   }
 
+  // Las flores se van ACUMULANDO de escena en escena (nunca se limpian),
+  // así que las 15 posiciones de abajo son un único jardín diseñado como
+  // un todo — no tres lotes independientes — para que no haya dos flores
+  // casi en las mismas coordenadas (el bug anterior: [50,4] y [50,3] casi
+  // se pisaban) y para que la cobertura sobre el planeta sea pareja, sin
+  // huecos vacíos, cuando están las 15 a la vez. Los tamaños se mantienen
+  // en un rango angosto (.68–1) para que las flores doradas luzcan en
+  // sincronía en vez de saltar entre gigantes y diminutas.
   const BATCHES = {
-    one:  [[50, 4, 1.15, 0, 0]],
-    few:  [[34, 10, .8, -8, 0], [50, 3, 1.15, 0, 180], [66, 10, .82, 9, 360], [42, 15, .7, -5, 540], [58, 15, .72, 6, 700]],
-    many: [[24, 20, .6, -14, 0], [38, 26, .66, -8, 120], [50, 24, .72, 0, 240], [62, 26, .66, 9, 360], [76, 20, .6, 13, 480],
-           [30, 33, .55, -10, 600], [46, 36, .6, -4, 720], [56, 36, .6, 5, 840], [70, 33, .56, 11, 960]],
+    one: [
+      [50, 8, 1.00, 0, 0],
+    ],
+    few: [
+      [38, 18, .85, -6, 0], [62, 18, .85, 6, 180],
+      [26, 22, .80, -12, 360], [74, 22, .80, 12, 540],
+    ],
+    many: [
+      [50, 25, .82, 0, 0], [31, 27, .78, -8, 120], [69, 27, .78, 8, 240],
+      [14, 32, .72, -16, 360], [86, 32, .72, 16, 480],
+      [37, 39, .74, -5, 600], [63, 39, .74, 5, 720],
+      [21, 42, .68, -12, 840], [79, 42, .68, 12, 960],
+      [50, 44, .70, 0, 1080],
+    ],
   };
 
   function bloomBatch(name) {

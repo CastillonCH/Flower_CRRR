@@ -207,13 +207,15 @@ async function drawHeart() {
     // círculo, así que escalar por transform hace que la estrella
     // "se deslice" desde esa esquina en vez de aparecer en su sitio.
     svgPts[i].c.animate([{ r: 0, opacity: 0 }, { r: STAR_R, opacity: 1 }],
-      { duration: 380, fill: 'forwards', easing: 'ease-out' });
-    await wait(REDUCED ? 10 : 70);
+      { duration: 460, fill: 'forwards', easing: 'ease-out' });
+    await wait(REDUCED ? 10 : 95);
   }
-  await wait(150);
-  // un cometa recorre el contorno mientras se dibujan las líneas, rápido
-  comet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 200, fill: 'forwards' });
-  const LINE_MS = REDUCED ? 10 : 150;
+  await wait(250);
+  // un cometa recorre el contorno mientras se dibujan las líneas, con
+  // un ritmo pausado — que se sienta como un trazo deliberado, ni
+  // arrastrado ni instantáneo
+  comet.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 250, fill: 'forwards' });
+  const LINE_MS = REDUCED ? 10 : 250;
   for (let i = 0; i < lines.length; i++) {
     const ln = lines[i]; ln.dataset.drawn = '1';
     const len = parseFloat(ln.style.strokeDasharray);
@@ -225,7 +227,7 @@ async function drawHeart() {
       { cx: a.sx, cy: a.sy }, { cx: b.sx, cy: b.sy }
     ], { duration: LINE_MS, fill: 'forwards', easing: 'linear' });
     comet.setAttribute('cx', b.sx); comet.setAttribute('cy', b.sy);
-    await wait(REDUCED ? 5 : LINE_MS * .4);
+    await wait(REDUCED ? 5 : LINE_MS * .6);
   }
   comet.animate([{ opacity: 1 }, { opacity: 0 }], { duration: 400, fill: 'forwards' });
   dot.animate([{ opacity: 0 }, { opacity: .9 }], { duration: 600, fill: 'forwards' });
