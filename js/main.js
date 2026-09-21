@@ -255,6 +255,11 @@ async function sceneNoche() {
   const eb = addEl('div', 'eyebrow', 'ENTRE MILLONES DE ESTRELLAS');
   const name = addEl('h1', 'hero-name', '');
   const line = addEl('p', 'line', '');
+  // el botón se crea YA (invisible) junto con el resto del texto, para
+  // que #ui reserve su espacio desde el principio de la escena: así
+  // nunca cambia de altura y nada se desplaza cuando el botón aparece
+  const b = makeButton('Descubrir'); ui.appendChild(b);
+  b.addEventListener('mouseenter', initAudio, { once: true });
   await wait(400);
   wish.classList.add('on');
   eb.classList.add('in');
@@ -263,8 +268,6 @@ async function sceneNoche() {
   await wait(1500);
   await typeInto(line, 'Encontré algo en el universo que quería mostrarte.', 40);
   await wait(300);
-  const b = makeButton('Descubrir'); ui.appendChild(b);
-  b.addEventListener('mouseenter', initAudio, { once: true });
   await waitClick(b);
   if (!audioReady) { initAudio(); }
   audioBtn.classList.add('on');
@@ -276,11 +279,11 @@ async function sceneLuz() {
   clearUI();
   wish.classList.remove('on');
   const line = addEl('p', 'line big', '');
+  const b = makeButton('Continuar'); ui.appendChild(b);
   drawHeart();
   await wait(600);
   await typeInto(line, 'Dicen que hay millones de estrellas…', 55);
   await wait(2600);
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await waitClick(b);
   await fadeOutUI();
 }
@@ -303,12 +306,12 @@ async function sceneLugar() {
   chapter('04', 'UN LUGAR PARA TI');
   clearUI();
   const line = addEl('p', 'line big', '');
+  const b = makeButton('Continuar'); ui.appendChild(b);
   await wait(700);
   await typeInto(line, 'Entonces entendí algo…', 60);
   await wait(600);
   CosmicFlowers.bloomBatch('one');
   await wait(1800);
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await waitClick(b);
   await fadeOutUI();
 }
@@ -317,11 +320,11 @@ async function sceneFlorece() {
   chapter('05', 'LO QUE FLORECE');
   clearUI();
   const line = addEl('p', 'line big', '');
+  const b = makeButton('Continuar'); ui.appendChild(b);
   await typeInto(line, 'No importa cuántos lugares existan…', 55);
   await wait(400);
   CosmicFlowers.bloomBatch('few');
   await wait(2400);
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await waitClick(b);
   await fadeOutUI();
 }
@@ -331,11 +334,11 @@ async function sceneTodo() {
   clearUI();
   Starfield.enableDust();
   const line = addEl('p', 'line big', '');
+  const b = makeButton('Continuar'); ui.appendChild(b);
   await typeInto(line, 'Podría regalarte todas las flores del mundo…', 52);
   await wait(400);
   CosmicFlowers.bloomBatch('many');
   await wait(2600);
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await waitClick(b);
   await fadeOutUI();
 }
@@ -344,18 +347,24 @@ async function sceneFinal() {
   chapter('07', 'EL INFINITO');
   clearUI();
   cosmos.style.transform = 'translate(-50%,-54%) scale(1.12)';
+  // todos los elementos de la escena se crean de una vez (invisibles
+  // los que aún no deben verse) para que #ui no cambie de altura en
+  // ningún momento — nada se desplaza mientras la escena avanza
   const line = addEl('p', 'line big', '');
-  await typeInto(line, '…pero preferí regalarte un universo entero.', 52);
-  await wait(1400);
   const eb = addEl('div', 'eyebrow', 'PARA ' + CONFIG.name.toUpperCase());
-  eb.style.marginTop = '4px'; eb.classList.add('in');
-  await wait(1000);
+  eb.style.marginTop = '4px';
   const heart = addEl('div', 'line', '∞');
   heart.style.cssText = 'font-family:var(--serif);font-style:italic;font-size:34px;color:var(--gold);opacity:0';
-  heart.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1400, fill: 'forwards' });
   const rep = document.createElement('button'); rep.id = 'replay'; rep.textContent = 'VOLVER A EMPEZAR';
-  ui.appendChild(rep); rep.classList.add('in');
+  ui.appendChild(rep);
   rep.addEventListener('click', () => location.reload());
+
+  await typeInto(line, '…pero preferí regalarte un universo entero.', 52);
+  await wait(1400);
+  eb.classList.add('in');
+  await wait(1000);
+  heart.animate([{ opacity: 0 }, { opacity: 1 }], { duration: 1400, fill: 'forwards' });
+  rep.classList.add('in');
 }
 
 /* ---------- DIRECTOR ---------- */
