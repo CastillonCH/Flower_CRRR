@@ -14,7 +14,7 @@ const ui = $('#ui');
 const ftop = $('#ftop'), fbot = $('#fbot');
 const chapNum = $('#chapNum'), chapName = $('#chapName');
 const wish = $('#wish'), cosmos = $('#cosmos'), curtain = $('#curtain');
-const flash = $('#flash'), rays = $('#rays'), constel = $('#constellation');
+const flash = $('#flash'), constel = $('#constellation');
 
 /* ---------- ARQUITECTURA: un único bucle central ----------
    main.js orquesta un solo requestAnimationFrame que actualiza y
@@ -91,6 +91,10 @@ function setMuted(m) {
 }
 audioBtn.addEventListener('click', () => { initAudio(); setMuted(!audioMuted); });
 setMuted(true);
+// ya no hay un botón de "empezar" que sirva de gesto para desbloquear el
+// audio del navegador: el toggle queda visible desde el principio para
+// que la persona lo active ella misma cuando quiera
+audioBtn.classList.add('on');
 
 /* ---------- TYPEWRITER ---------- */
 let skipReq = false;
@@ -115,7 +119,7 @@ function typeInto(el, text, speed = 42) {
     requestAnimationFrame(step);
   });
 }
-document.addEventListener('click', e => { if (!e.target.closest('.cta,#audio,#replay')) skipReq = true; });
+document.addEventListener('click', e => { if (!e.target.closest('#audio,#replay')) skipReq = true; });
 
 /* ---------- helpers UI ---------- */
 function clearUI() { ui.innerHTML = ''; }
@@ -130,15 +134,6 @@ function chapter(num, name) {
     chapNum.classList.remove('swap'); chapName.classList.remove('swap');
     curtain.classList.remove('on');
   }, REDUCED ? 10 : 260);
-}
-function makeButton(label) {
-  const b = document.createElement('button'); b.className = 'cta';
-  b.innerHTML = `<svg viewBox="0 0 220 60"><ellipse cx="110" cy="30" rx="105" ry="26"/><ellipse class="glow" cx="110" cy="30" rx="105" ry="26"/></svg>
-    <span class="label">${label}<span class="spark">✦</span></span>`;
-  return b;
-}
-function waitClick(btn) {
-  return new Promise(r => { btn.classList.add('in'); btn.addEventListener('click', () => r(), { once: true }); });
 }
 const wait = ms => new Promise(r => setTimeout(r, ms));
 
@@ -261,11 +256,6 @@ async function sceneNoche() {
   const eb = addEl('div', 'eyebrow', 'ENTRE MILLONES DE ESTRELLAS');
   const name = addEl('h1', 'hero-name', '');
   const line = addEl('p', 'line', '');
-  // el botón se crea YA (invisible) junto con el resto del texto, para
-  // que #ui reserve su espacio desde el principio de la escena: así
-  // nunca cambia de altura y nada se desplaza cuando el botón aparece
-  const b = makeButton('Descubrir'); ui.appendChild(b);
-  b.addEventListener('mouseenter', initAudio, { once: true });
   await wait(400);
   wish.classList.add('on');
   eb.classList.add('in');
@@ -273,10 +263,7 @@ async function sceneNoche() {
   name.textContent = CONFIG.name + '…'; name.classList.add('in');
   await wait(1500);
   await typeInto(line, 'Encontré algo en el universo que quería mostrarte.', 40);
-  await wait(300);
-  await waitClick(b);
-  if (!audioReady) { initAudio(); }
-  audioBtn.classList.add('on');
+  await wait(2600);
   await fadeOutUI();
 }
 
@@ -289,12 +276,12 @@ async function sceneLuz() {
   // donde a veces casi no quedaba espacio entre ambos
   ui.classList.add('below-heart');
   const line = addEl('p', 'line big', '');
-  const b = makeButton('Continuar'); ui.appendChild(b);
   drawHeart();
   await wait(600);
   await typeInto(line, 'Dicen que hay millones de estrellas…', 55);
-  await wait(2600);
-  await waitClick(b);
+  // el corazón tarda ~5.6s en terminar de dibujarse desde que empezó;
+  // se espera lo suficiente para que nunca se corte a mitad de trazo
+  await wait(3400);
   await fadeOutUI();
 }
 
@@ -303,13 +290,11 @@ async function sceneDestello() {
   clearUI();
   hideHeart();
   flash.classList.add('fire');
-  rays.classList.add('fire');
   await wait(700);
   cosmos.classList.add('show');
   cosmos.style.transform = 'translate(-50%,-50%) scale(1)';
   await wait(2000);
   flash.classList.remove('fire');
-  rays.classList.remove('fire');
 }
 
 async function sceneLugar() {
@@ -321,13 +306,11 @@ async function sceneLugar() {
   ui.classList.remove('below-heart');
   ui.classList.add('top');
   const line = addEl('p', 'line big', '');
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await wait(700);
   await typeInto(line, 'Entonces entendí algo…', 60);
   await wait(600);
   CosmicFlowers.bloomBatch('one');
-  await wait(1800);
-  await waitClick(b);
+  await wait(2600);
   await fadeOutUI();
 }
 
@@ -335,12 +318,10 @@ async function sceneFlorece() {
   chapter('05', 'LO QUE FLORECE');
   clearUI();
   const line = addEl('p', 'line big', '');
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await typeInto(line, 'No importa cuántos lugares existan…', 55);
   await wait(400);
   CosmicFlowers.bloomBatch('few');
-  await wait(2400);
-  await waitClick(b);
+  await wait(3200);
   await fadeOutUI();
 }
 
@@ -349,12 +330,10 @@ async function sceneTodo() {
   clearUI();
   Starfield.enableDust();
   const line = addEl('p', 'line big', '');
-  const b = makeButton('Continuar'); ui.appendChild(b);
   await typeInto(line, 'Podría regalarte todas las flores del mundo…', 52);
   await wait(400);
   CosmicFlowers.bloomBatch('many');
-  await wait(2600);
-  await waitClick(b);
+  await wait(3600);
   await fadeOutUI();
 }
 

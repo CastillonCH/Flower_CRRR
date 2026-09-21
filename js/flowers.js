@@ -97,27 +97,31 @@ const CosmicFlowers = (() => {
   }
 
   // Las flores se van ACUMULANDO de escena en escena (nunca se limpian),
-  // así que las 15 posiciones de abajo son un único jardín diseñado como
-  // un todo — no tres lotes independientes — para que no haya dos flores
-  // casi en las mismas coordenadas (el bug anterior: [50,4] y [50,3] casi
-  // se pisaban) y para que la cobertura sobre el planeta sea pareja, sin
-  // huecos vacíos, cuando están las 15 a la vez. Los tamaños se mantienen
-  // en un rango angosto (.68–1) para que las flores doradas luzcan en
+  // así que las 20 posiciones de abajo (= POOL_SIZE, se usan todas) son
+  // un único jardín diseñado como un todo — no lotes independientes —
+  // para que no haya dos flores casi en las mismas coordenadas y para
+  // que la cobertura sobre el planeta sea pareja y llena, sin huecos
+  // vacíos, en cada etapa (no sólo al final). Los tamaños se mantienen
+  // en un rango angosto (.66–1) para que las flores doradas luzcan en
   // sincronía en vez de saltar entre gigantes y diminutas.
   const BATCHES = {
+    // la flor protagonista
     one: [
       [50, 8, 1.00, 0, 0],
     ],
+    // seis más alrededor de ella — ya se ve un ramo, no una flor sola
     few: [
-      [38, 18, .85, -6, 0], [62, 18, .85, 6, 180],
-      [26, 22, .80, -12, 360], [74, 22, .80, 12, 540],
+      [20, 20, .86, -14, 0], [32, 16, .84, -8, 150], [44, 19, .82, -3, 300],
+      [56, 19, .82, 3, 450], [68, 16, .84, 8, 600], [80, 20, .86, 14, 750],
     ],
+    // trece más: cubre el resto de la cara visible del planeta de
+    // lado a lado, en tres filas que bajan hacia el ecuador
     many: [
-      [50, 25, .82, 0, 0], [31, 27, .78, -8, 120], [69, 27, .78, 8, 240],
-      [14, 32, .72, -16, 360], [86, 32, .72, 16, 480],
-      [37, 39, .74, -5, 600], [63, 39, .74, 5, 720],
-      [21, 42, .68, -12, 840], [79, 42, .68, 12, 960],
-      [50, 44, .70, 0, 1080],
+      [14, 30, .78, -16, 0], [28, 26, .76, -9, 120], [41, 29, .74, -3, 240],
+      [59, 29, .74, 3, 360], [72, 26, .76, 9, 480], [86, 30, .78, 16, 600],
+      [22, 40, .70, -12, 720], [36, 38, .72, -5, 840], [50, 36, .74, 0, 960],
+      [64, 38, .72, 5, 1080], [78, 40, .70, 12, 1200],
+      [42, 45, .66, -6, 1320], [58, 45, .66, 6, 1440],
     ],
   };
 
