@@ -293,6 +293,14 @@ body{
   align-self:flex-start;
   margin-top:calc(env(safe-area-inset-top,0px) + 96px);
 }
+/* escena de la constelación: el corazón termina en un punto distinto
+   según el tamaño de pantalla, así que su altura real se calcula en
+   JS (layoutHeart) y se guarda en --heart-bottom; el texto se ancla
+   siempre justo debajo de ese punto, nunca pegado ni adivinado. */
+#ui.below-heart{
+  align-self:flex-start;
+  margin-top:var(--heart-bottom, 42vh);
+}
 
 .frame-top{
   position:fixed;

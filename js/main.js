@@ -172,11 +172,17 @@ function layoutHeart() {
   // del texto (que se centra verticalmente en la pantalla)
   const scale = Math.min(w, h) * 0.007;
   const cx = w / 2, cy = h * 0.26;
+  let bottomY = cy;
   pts.forEach((p, i) => {
     const X = cx + p.x * scale, Y = cy - p.y * scale;
     svgPts[i].sx = X; svgPts[i].sy = Y;
     svgPts[i].c.setAttribute('cx', X); svgPts[i].c.setAttribute('cy', Y);
+    if (Y > bottomY) bottomY = Y;
   });
+  // el texto de esta escena se ancla justo debajo de la punta real del
+  // corazón (calculada aquí, no adivinada por el centrado del viewport),
+  // así el espacio queda correcto en cualquier tamaño de pantalla
+  document.documentElement.style.setProperty('--heart-bottom', (bottomY + 46) + 'px');
   lines.forEach((ln, i) => {
     const a = svgPts[i], b = svgPts[(i + 1) % pts.length];
     ln.setAttribute('x1', a.sx); ln.setAttribute('y1', a.sy);
@@ -278,6 +284,10 @@ async function sceneLuz() {
   chapter('02', 'TU LUZ');
   clearUI();
   wish.classList.remove('on');
+  // el texto se ancla debajo de la punta real del corazón (ver
+  // layoutHeart) en vez de centrarse a ciegas en todo el viewport,
+  // donde a veces casi no quedaba espacio entre ambos
+  ui.classList.add('below-heart');
   const line = addEl('p', 'line big', '');
   const b = makeButton('Continuar'); ui.appendChild(b);
   drawHeart();
@@ -308,6 +318,7 @@ async function sceneLugar() {
   // de aquí en adelante el planeta está a la vista, así que el texto
   // se ancla en su propia franja arriba de él en vez de centrarse en
   // todo el viewport (donde terminaría encimado sobre el planeta)
+  ui.classList.remove('below-heart');
   ui.classList.add('top');
   const line = addEl('p', 'line big', '');
   const b = makeButton('Continuar'); ui.appendChild(b);
