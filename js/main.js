@@ -3,19 +3,58 @@
    Cambia el nombre de tu persona aquí:
    ============================================================ */
 const CONFIG = {
-  name: "Andrea",            // ← el nombre que aparece entre las estrellas
+  name: "Cynthia",           // ← el nombre que aparece entre las estrellas
 };
 /* ============================================================ */
 
 const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
 const $ = s => document.querySelector(s);
+const stage = $('#stage');
 const ui = $('#ui');
 const ftop = $('#ftop'), fbot = $('#fbot');
 const chapNum = $('#chapNum'), chapName = $('#chapName');
 const wish = $('#wish'), cosmos = $('#cosmos'), curtain = $('#curtain');
-const flash = $('#flash'), rays = $('#rays'), constel = $('#constellation'), goldenC = $('#golden');
+const flash = $('#flash'), rays = $('#rays'), constel = $('#constellation');
 
-Starfield.init();
+/* ---------- ARQUITECTURA: un único bucle central ----------
+   main.js orquesta un solo requestAnimationFrame que actualiza y
+   dibuja Starfield y CosmicFlowers en orden (fondo → flores). Ninguno
+   de los dos módulos corre su propio rAF, así no compiten por el
+   hilo principal. */
+const skyCanvas = document.getElementById('sky');
+const flowersCanvas = document.getElementById('flowersCanvas');
+Starfield.init(skyCanvas);
+CosmicFlowers.init(flowersCanvas);
+
+let lastTs = 0;
+function tick(ts) {
+  if (!lastTs) lastTs = ts;
+  let dt = (ts - lastTs) / 1000;
+  lastTs = ts;
+  dt = Math.min(dt, .05); // evita saltos grandes si la pestaña estuvo oculta
+
+  Starfield.update(dt); Starfield.draw();
+  CosmicFlowers.update(dt); CosmicFlowers.draw();
+
+  requestAnimationFrame(tick);
+}
+requestAnimationFrame(tick);
+
+// debouncing del resize: recalcula tamaño/DPR sólo cuando el usuario
+// termina de redimensionar, no en cada evento intermedio
+function debounce(fn, waitMs) {
+  let t;
+  return (...args) => { clearTimeout(t); t = setTimeout(() => fn(...args), waitMs); };
+}
+const handleResize = debounce(() => {
+  Starfield.resize();
+  CosmicFlowers.resize();
+  if (currentHeart) layoutHeart();
+}, 150);
+addEventListener('resize', handleResize);
+
+// transición de entrada: toda la experiencia aparece desde opacity:0
+requestAnimationFrame(() => requestAnimationFrame(() => stage.classList.add('in')));
 
 /* ---------- AUDIO ambiental (generado, sutil) ---------- */
 let actx = null, master = null, audioReady = false, audioMuted = true;
@@ -270,7 +309,7 @@ async function sceneFlorece() {
 async function sceneTodo() {
   chapter('06', 'TODO PARA TI');
   clearUI();
-  Starfield.enableGolden();
+  Starfield.enableDust();
   const line = addEl('p', 'line big', '');
   await typeInto(line, 'Podría regalarte todas las flores del mundo…', 52);
   await wait(400);

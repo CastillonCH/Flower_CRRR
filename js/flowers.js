@@ -1,100 +1,91 @@
 /* ============================================================
-   FLORES CÓSMICAS — pétalos redondeados dorados, con brillo suave
-   y un pequeño destello en el centro. Dos tonos de amarillo/dorado
-   para dar variedad sutil sin salirse de la paleta.
+   FLORES CÓSMICAS — pool fijo de flores dibujadas en canvas
+   (nunca se crean nodos DOM/SVG nuevos), con brillo sutil,
+   balanceo orgánico y colores cálidos (dorado/ámbar).
+
+   Igual que Starfield, este módulo no tiene su propio
+   requestAnimationFrame: expone init/resize/bloomBatch/
+   update(dt)/draw() para el bucle central de main.js.
    ============================================================ */
 const CosmicFlowers = (() => {
-  const flowersEl = document.getElementById('flowers');
+  const REDUCED = window.matchMedia('(prefers-reduced-motion: reduce)').matches;
+  const TAU = Math.PI * 2;
+  const DEG = Math.PI / 180;
+  const BLOOM_MS = 1500;
 
-  const VARIANTS = {
-    gold:  { g1: '--bloom-gold-1',  g2: '--bloom-gold-2',  g3: '--bloom-gold-3',  glow: 'glow-gold' },
-    amber: { g1: '--bloom-amber-1', g2: '--bloom-amber-2', g3: '--bloom-amber-3', glow: 'glow-amber' },
-  };
+  let canvas, ctx, W = 0, H = 0, dpr = 1;
+  let petalPath = null;
+  let gradients = null;
 
-  let uid = 0;
+  // ---- pool fijo: bloomBatch() reactiva slots existentes, nunca crea
+  // elementos nuevos — así se elimina el lag progresivo de acumular
+  // nodos vivos para siempre, como ocurría con el DOM/SVG original ----
+  const POOL_SIZE = 20;
+  const pool = Array.from({ length: POOL_SIZE }, () => ({
+    active: false, x: 0, y: 0, baseScale: 1, tilt: 0, colorIdx: 0,
+    delay: 0, age: 0, bloom: 0,
+    swayPhase: 0, swaySpeed: 0, sparklePhase: 0, z: 0,
+  }));
+  let activeList = []; // se reconstruye sólo al llamar bloomBatch, no por fotograma
 
-  function flowerSVG(id, variant) {
-    const v = VARIANTS[variant];
-    const pg = `pg${id}`, cg = `cg${id}`, hg = `hg${id}`;
-    // pétalos ovalados clásicos, redondeados — reconocibles como flor, no como espinas
-    let petals = '';
-    const N = 11;
-    for (let i = 0; i < N; i++) {
-      const ang = i * (360 / N);
-      petals += `<g transform="rotate(${ang})">
-        <ellipse cx="0" cy="-15" rx="6.6" ry="14.5" fill="url(#${pg})" stroke="rgba(255,255,255,.22)" stroke-width=".5"/>
-      </g>`;
-    }
-    return `<svg width="70" height="118" viewBox="-35 -40 70 118" fill="none">
-      <defs>
-        <radialGradient id="${pg}" cx="46%" cy="72%" r="72%">
-          <stop offset="0%" stop-color="var(${v.g1})"/>
-          <stop offset="55%" stop-color="var(${v.g2})"/>
-          <stop offset="100%" stop-color="var(${v.g3})"/>
-        </radialGradient>
-        <radialGradient id="${cg}" cx="42%" cy="38%" r="65%">
-          <stop offset="0%" stop-color="var(${v.g1})"/>
-          <stop offset="60%" stop-color="var(${v.g2})"/>
-          <stop offset="100%" stop-color="#8a5a1e"/>
-        </radialGradient>
-        <radialGradient id="${hg}" cx="50%" cy="50%" r="50%">
-          <stop offset="0%" stop-color="#fff" stop-opacity=".85"/>
-          <stop offset="100%" stop-color="#fff" stop-opacity="0"/>
-        </radialGradient>
-      </defs>
-
-      <path d="M0,74 C-2,50 -3,28 0,6" stroke="#3f6b3f" stroke-width="2.4" stroke-linecap="round"/>
-      <path d="M0,52 C-14,44 -20,50 -24,42 C-14,40 -6,44 0,44" fill="#4a7a48"/>
-      <path d="M0,40 C12,32 19,38 23,30 C13,28 6,32 0,32" fill="#4a7a48"/>
-
-      <g transform="translate(0,-2)">
-        ${petals}
-        <circle r="10" fill="url(#${hg})" opacity=".5"/>
-        <circle r="8.5" fill="url(#${cg})"/>
-        <circle r="8.5" fill="none" stroke="rgba(255,255,255,.25)" stroke-width=".6"/>
-        <circle cx="-2.4" cy="-2.6" r="1.6" fill="#fffdf3" opacity=".8"/>
-      </g>
-    </svg>`;
+  function easeOutBack(t) {
+    const c1 = 1.55, c3 = c1 + 1;
+    return 1 + c3 * Math.pow(t - 1, 3) + c1 * Math.pow(t - 1, 2);
   }
 
-  function sparkleOrbit(color) {
-    const wrap = document.createElement('div');
-    wrap.className = 'sparkle-orbit';
-    const radius = 24 + Math.random() * 10;
-    const dur = 11 + Math.random() * 7;
-    wrap.style.animationDuration = dur + 's';
-    wrap.style.setProperty('--sc', color);
-    const dot = document.createElement('span');
-    dot.className = 'dot';
-    dot.style.transform = `translate(-50%,-50%) translateX(${radius}px)`;
-    wrap.appendChild(dot);
-    return wrap;
+  function buildStatic() {
+    // un único pétalo (Path2D) reutilizado por todas las flores y pétalos:
+    // nada de reconstruir curvas Bézier en cada fotograma
+    petalPath = new Path2D();
+    petalPath.ellipse(0, -15, 6.6, 14.5, 0, 0, TAU);
+
+    const petalGold = ctx.createRadialGradient(-2, -22, 1, 0, -15, 15);
+    petalGold.addColorStop(0, '#fff6d6');
+    petalGold.addColorStop(.55, '#f6c651');
+    petalGold.addColorStop(1, '#d79a2e');
+
+    const petalAmber = ctx.createRadialGradient(-2, -22, 1, 0, -15, 15);
+    petalAmber.addColorStop(0, '#ffe9b8');
+    petalAmber.addColorStop(.55, '#e6a92f');
+    petalAmber.addColorStop(1, '#b9772a');
+
+    const center = ctx.createRadialGradient(-1.5, -1.5, 0, 0, 0, 8.5);
+    center.addColorStop(0, '#fff6d6');
+    center.addColorStop(.6, '#f6c651');
+    center.addColorStop(1, '#8a5a1e');
+
+    const halo = ctx.createRadialGradient(0, -14, 0, 0, -14, 34);
+    halo.addColorStop(0, 'rgba(255,214,140,.35)');
+    halo.addColorStop(1, 'rgba(255,214,140,0)');
+
+    // los gradientes/paths están en coordenadas locales — el canvas los
+    // reproyecta según la matriz de transformación vigente al pintar,
+    // así que un mismo objeto sirve para las 20 flores del pool
+    gradients = { petal: [petalGold, petalAmber], center, halo };
   }
 
-  function makeFlower(leftPct, topPct, scale, tilt, delay, variant) {
-    uid++;
-    const f = document.createElement('div');
-    f.className = 'flower';
-    f.style.left = leftPct + '%';
-    f.style.top = topPct + '%';
-    f.style.setProperty('--tilt', tilt + 'deg');
-    f.style.width = (70 * scale) + 'px';
-    f.style.zIndex = Math.round(1000 - topPct * 10);
-    f.innerHTML = flowerSVG(uid, variant);
-    f.querySelector('svg').classList.add(VARIANTS[variant].glow);
-    f.appendChild(sparkleOrbit('#f6dd9c'));
-    flowersEl.appendChild(f);
-    setTimeout(() => {
-      f.classList.add('bloom');
-      setTimeout(() => f.classList.add('sway'), 1500);
-    }, delay);
-    return f;
+  function resize() {
+    if (!canvas) return;
+    dpr = Math.min(window.devicePixelRatio || 1, 2);
+    const parent = canvas.parentElement;
+    W = parent ? parent.clientWidth : canvas.clientWidth;
+    H = parent ? parent.clientHeight : canvas.clientHeight;
+    canvas.width = Math.round(W * dpr);
+    canvas.height = Math.round(H * dpr);
+    canvas.style.width = W + 'px';
+    canvas.style.height = H + 'px';
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.scale(dpr, dpr);
+    buildStatic();
   }
 
-  const palette = ['gold', 'gold', 'amber'];
-  function colorFor(i) { return palette[i % palette.length]; }
+  function init(canvasEl) {
+    canvas = canvasEl;
+    ctx = canvas.getContext('2d');
+    resize();
+  }
 
-  const flowerBatches = {
+  const BATCHES = {
     one:  [[50, 4, 1.15, 0, 0]],
     few:  [[34, 10, .8, -8, 0], [50, 3, 1.15, 0, 180], [66, 10, .82, 9, 360], [42, 15, .7, -5, 540], [58, 15, .72, 6, 700]],
     many: [[24, 20, .6, -14, 0], [38, 26, .66, -8, 120], [50, 24, .72, 0, 240], [62, 26, .66, 9, 360], [76, 20, .6, 13, 480],
@@ -102,8 +93,118 @@ const CosmicFlowers = (() => {
   };
 
   function bloomBatch(name) {
-    (flowerBatches[name] || []).forEach(([l, t, s, ti, d], i) => makeFlower(l, t, s, ti, d, colorFor(i)));
+    const list = BATCHES[name] || [];
+    list.forEach(([leftPct, topPct, scale, tilt, delay], i) => {
+      const slot = pool.find(f => !f.active);
+      if (!slot) return;
+      slot.active = true;
+      slot.x = leftPct / 100;
+      slot.y = topPct / 100;
+      slot.baseScale = scale;
+      slot.tilt = tilt;
+      slot.colorIdx = i % 3 === 2 ? 1 : 0; // mayormente dorado, un toque de ámbar
+      slot.delay = delay;
+      slot.age = 0;
+      slot.bloom = 0;
+      slot.swayPhase = Math.random() * TAU;
+      slot.swaySpeed = .45 + Math.random() * .25;
+      slot.sparklePhase = Math.random() * TAU;
+      slot.z = topPct;
+    });
+    // se reconstruye una vez por lote (3 veces en toda la experiencia),
+    // no en cada fotograma
+    activeList = pool.filter(f => f.active).sort((a, b) => b.z - a.z);
   }
 
-  return { bloomBatch };
+  function update(dt) {
+    for (const f of activeList) {
+      f.age += dt * 1000;
+      if (f.age < f.delay) continue;
+      const t = Math.min(1, (f.age - f.delay) / BLOOM_MS);
+      f.bloom = REDUCED ? t : easeOutBack(t);
+      if (!REDUCED) {
+        f.swayPhase += dt * f.swaySpeed;
+        f.sparklePhase += dt * 1.6;
+      }
+    }
+  }
+
+  function drawFlower(f) {
+    const px = f.x * W, py = f.y * H;
+    const sway = REDUCED ? 0 : Math.sin(f.swayPhase) * 3;
+    const scale = Math.max(0, f.baseScale * f.bloom);
+    const bloomA = Math.min(1, Math.max(0, f.bloom));
+
+    ctx.save();
+    ctx.translate(px, py);
+    ctx.rotate((f.tilt + sway) * DEG);
+    ctx.scale(scale, scale);
+
+    // brillo sutil detrás de la flor
+    ctx.globalAlpha = bloomA * .8;
+    ctx.fillStyle = gradients.halo;
+    ctx.beginPath(); ctx.arc(0, -14, 34, 0, TAU); ctx.fill();
+    ctx.globalAlpha = 1;
+
+    // tallo
+    ctx.strokeStyle = '#3f6b3f';
+    ctx.lineWidth = 2.2;
+    ctx.lineCap = 'round';
+    ctx.beginPath();
+    ctx.moveTo(0, 34);
+    ctx.bezierCurveTo(-1, 22, -1.4, 12, 0, 2);
+    ctx.stroke();
+
+    // hojas
+    ctx.fillStyle = '#4a7a48';
+    ctx.beginPath();
+    ctx.moveTo(0, 24);
+    ctx.bezierCurveTo(-6, 20, -9, 23, -11, 19);
+    ctx.bezierCurveTo(-6, 18, -3, 20, 0, 20);
+    ctx.fill();
+    ctx.beginPath();
+    ctx.moveTo(0, 14);
+    ctx.bezierCurveTo(6, 10, 9, 13, 11, 9);
+    ctx.bezierCurveTo(6, 8, 3, 10, 0, 10);
+    ctx.fill();
+
+    // pétalos — mismo Path2D reutilizado, sólo rotado por pétalo
+    ctx.fillStyle = gradients.petal[f.colorIdx];
+    const N = 11;
+    for (let i = 0; i < N; i++) {
+      ctx.save();
+      ctx.rotate((i * 360 / N) * DEG);
+      ctx.fill(petalPath);
+      ctx.restore();
+    }
+
+    // centro
+    ctx.beginPath(); ctx.arc(0, 0, 8.5, 0, TAU);
+    ctx.fillStyle = gradients.center; ctx.fill();
+
+    // chispa diminuta que orbita muy despacio (movimiento orgánico)
+    if (!REDUCED) {
+      const r = 22;
+      const sx = Math.cos(f.sparklePhase) * r;
+      const sy = Math.sin(f.sparklePhase) * r * .6 - 4;
+      const sa = .35 + .45 * (.5 + .5 * Math.sin(f.sparklePhase * 2));
+      ctx.globalAlpha = sa;
+      ctx.fillStyle = '#fff1c4';
+      ctx.beginPath(); ctx.arc(sx, sy, 1.6, 0, TAU); ctx.fill();
+      ctx.globalAlpha = 1;
+    }
+
+    ctx.restore();
+  }
+
+  function draw() {
+    if (!ctx) return;
+    ctx.clearRect(0, 0, W, H);
+    for (const f of activeList) {
+      if (f.bloom <= 0) continue;
+      drawFlower(f);
+    }
+  }
+
+  return { init, resize, bloomBatch, update, draw };
 })();
