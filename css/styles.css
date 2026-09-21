@@ -20,19 +20,13 @@
   --planet-c:#0c1512;
   --flash:#f8ecca;
 
-  /* paleta de flores cósmicas */
-  --bloom-gold-1:#fff3c4;
+  /* paleta de flores cósmicas — dos tonos de dorado */
+  --bloom-gold-1:#fff6d6;
   --bloom-gold-2:#f6c651;
-  --bloom-gold-3:#b9772a;
-  --bloom-rose-1:#ffd9ec;
-  --bloom-rose-2:#f083b0;
-  --bloom-rose-3:#a13d72;
-  --bloom-violet-1:#e3d9ff;
-  --bloom-violet-2:#9c8bf0;
-  --bloom-violet-3:#4f3fa0;
-  --bloom-cyan-1:#d6faff;
-  --bloom-cyan-2:#5fd4e0;
-  --bloom-cyan-3:#1f7a8c;
+  --bloom-gold-3:#d79a2e;
+  --bloom-amber-1:#ffe9b8;
+  --bloom-amber-2:#e6a92f;
+  --bloom-amber-3:#b9772a;
 
   --serif:'Playfair Display', Georgia, serif;
   --serif2:'Cormorant Garamond', Georgia, serif;
@@ -65,24 +59,25 @@ body{
   inset:-10%;
   z-index:-1;
   pointer-events:none;
-  filter:blur(60px) saturate(130%);
-  opacity:.55;
+  filter:blur(38px);
+  opacity:.32;
   mix-blend-mode:screen;
+  will-change:transform;
 }
 #nebula .blob{
   position:absolute;
   border-radius:50%;
-  opacity:.6;
-  animation:drift 46s ease-in-out infinite alternate;
+  opacity:.55;
+  animation:drift 58s ease-in-out infinite alternate;
+  will-change:transform;
 }
-#nebula .b1{width:52vw;height:52vw;top:2%;left:6%;background:radial-gradient(circle,rgba(159,120,220,.55),transparent 65%);animation-duration:52s}
-#nebula .b2{width:44vw;height:44vw;top:38%;right:2%;background:radial-gradient(circle,rgba(246,198,81,.35),transparent 65%);animation-duration:60s;animation-delay:-14s}
-#nebula .b3{width:38vw;height:38vw;bottom:0;left:22%;background:radial-gradient(circle,rgba(90,180,200,.4),transparent 65%);animation-duration:44s;animation-delay:-8s}
-#nebula .b4{width:30vw;height:30vw;top:12%;right:28%;background:radial-gradient(circle,rgba(240,131,176,.28),transparent 65%);animation-duration:38s;animation-delay:-20s}
+#nebula .b1{width:46vw;height:46vw;top:2%;left:8%;background:radial-gradient(circle,rgba(120,110,180,.4),transparent 65%);animation-duration:64s}
+#nebula .b2{width:38vw;height:38vw;top:40%;right:4%;background:radial-gradient(circle,rgba(246,198,81,.22),transparent 65%);animation-duration:70s;animation-delay:-18s}
+#nebula .b3{width:34vw;height:34vw;bottom:2%;left:24%;background:radial-gradient(circle,rgba(70,140,160,.28),transparent 65%);animation-duration:54s;animation-delay:-10s}
 @keyframes drift{
   0%{transform:translate(0,0) scale(1)}
-  50%{transform:translate(3%,-4%) scale(1.08)}
-  100%{transform:translate(-3%,3%) scale(.98)}
+  50%{transform:translate(2%,-3%) scale(1.05)}
+  100%{transform:translate(-2%,2%) scale(.97)}
 }
 
 #milkyway{
@@ -179,15 +174,17 @@ body{
   70%{transform:translate(-50%,0) scale(1.08) rotate(calc(var(--tilt,0deg) * 1.15))}
   100%{opacity:1; transform:translate(-50%,0) scale(1) rotate(var(--tilt,0deg))}
 }
-.breathe{animation:sway 6s ease-in-out infinite alternate, breathe 4.2s ease-in-out infinite}
-@keyframes sway{from{transform:rotate(-2.2deg)}to{transform:rotate(2.2deg)}}
-@keyframes breathe{0%,100%{filter:brightness(1) saturate(1)}50%{filter:brightness(1.12) saturate(1.15)}}
+/* nota de rendimiento: nunca animar `filter` en bucle infinito (fuerza repintado
+   por fotograma). El balanceo usa sólo `transform`, que va por GPU/compositor. */
+.sway{animation:sway 6s ease-in-out infinite alternate}
+@keyframes sway{
+  from{transform:rotate(-2.2deg) scale(1)}
+  to{transform:rotate(2.2deg) scale(1.015)}
+}
 
 .flower svg{display:block; overflow:visible}
-.flower .glow-gold{filter:drop-shadow(0 0 10px rgba(246,198,81,.55)) drop-shadow(0 0 22px rgba(246,198,81,.22))}
-.flower .glow-rose{filter:drop-shadow(0 0 10px rgba(240,131,176,.55)) drop-shadow(0 0 22px rgba(240,131,176,.22))}
-.flower .glow-violet{filter:drop-shadow(0 0 10px rgba(156,139,240,.55)) drop-shadow(0 0 22px rgba(156,139,240,.22))}
-.flower .glow-cyan{filter:drop-shadow(0 0 10px rgba(95,212,224,.55)) drop-shadow(0 0 22px rgba(95,212,224,.22))}
+.flower .glow-gold{filter:drop-shadow(0 0 9px rgba(246,198,81,.5))}
+.flower .glow-amber{filter:drop-shadow(0 0 9px rgba(230,169,47,.5))}
 
 /* estrellas diminutas que orbitan cada flor */
 .sparkle-orbit{
@@ -269,32 +266,41 @@ body{
   55%{opacity:1}
   100%{opacity:0}
 }
+/* destello: un burst circular contenido (nunca un rectángulo) que se
+   expande y gira sutilmente desde el centro del flash */
 #rays{
   position:fixed;
-  inset:0;
+  left:50%; top:45%;
   z-index:19;
+  width:120vmax; height:120vmax;
+  margin-left:-60vmax; margin-top:-60vmax;
+  border-radius:50%;
   pointer-events:none;
   opacity:0;
-  background:conic-gradient(from 0deg at 50% 45%,
-    rgba(255,250,240,.35) 0deg, transparent 8deg,
-    rgba(255,250,240,.20) 16deg, transparent 26deg,
-    rgba(255,250,240,.30) 34deg, transparent 44deg,
-    rgba(255,250,240,.18) 54deg, transparent 66deg,
-    rgba(255,250,240,.28) 78deg, transparent 90deg,
-    rgba(255,250,240,.20) 104deg, transparent 118deg,
-    rgba(255,250,240,.30) 132deg, transparent 148deg,
-    rgba(255,250,240,.18) 164deg, transparent 180deg,
-    rgba(255,250,240,.30) 198deg, transparent 214deg,
-    rgba(255,250,240,.20) 230deg, transparent 246deg,
-    rgba(255,250,240,.28) 262deg, transparent 278deg,
-    rgba(255,250,240,.20) 296deg, transparent 312deg,
-    rgba(255,250,240,.30) 330deg, transparent 346deg, rgba(255,250,240,.35) 360deg);
+  mix-blend-mode:screen;
+  background:conic-gradient(from 0deg,
+    rgba(255,250,240,.32) 0deg, transparent 10deg,
+    rgba(255,250,240,.18) 20deg, transparent 34deg,
+    rgba(255,250,240,.28) 48deg, transparent 62deg,
+    rgba(255,250,240,.16) 76deg, transparent 92deg,
+    rgba(255,250,240,.26) 108deg, transparent 122deg,
+    rgba(255,250,240,.18) 136deg, transparent 152deg,
+    rgba(255,250,240,.28) 168deg, transparent 182deg,
+    rgba(255,250,240,.16) 196deg, transparent 212deg,
+    rgba(255,250,240,.26) 228deg, transparent 242deg,
+    rgba(255,250,240,.18) 256deg, transparent 272deg,
+    rgba(255,250,240,.28) 288deg, transparent 302deg,
+    rgba(255,250,240,.18) 316deg, transparent 332deg,
+    rgba(255,250,240,.30) 346deg, rgba(255,250,240,.32) 360deg);
+  -webkit-mask-image:radial-gradient(circle, #000 0%, #000 55%, transparent 78%);
+  mask-image:radial-gradient(circle, #000 0%, #000 55%, transparent 78%);
+  transform:scale(.1) rotate(0deg);
 }
-#rays.fire{animation:raysSpin 2.6s ease-out forwards}
-@keyframes raysSpin{
-  0%{opacity:0; transform:scale(.6) rotate(0deg)}
-  35%{opacity:.9}
-  100%{opacity:0; transform:scale(1.6) rotate(35deg)}
+#rays.fire{animation:raysBurst 2.4s cubic-bezier(.2,.7,.3,1) forwards}
+@keyframes raysBurst{
+  0%{opacity:0; transform:scale(.08) rotate(0deg)}
+  30%{opacity:.8}
+  100%{opacity:0; transform:scale(.5) rotate(18deg)}
 }
 
 /* ---- interfaz de texto ---- */
@@ -360,6 +366,20 @@ body{
 }
 .frame-bottom.on{opacity:.9}
 .frame-bottom .rule{width:34px;height:1px;background:var(--faint);opacity:.5}
+.frame-bottom span{display:inline-block; transition:opacity .4s ease, transform .4s ease}
+.frame-bottom span.swap{opacity:0; transform:translateY(4px)}
+
+/* transición suave entre escenas: un respiro muy breve, no un corte seco */
+#curtain{
+  position:fixed;
+  inset:0;
+  z-index:15;
+  pointer-events:none;
+  background:var(--void);
+  opacity:0;
+  transition:opacity .5s ease;
+}
+#curtain.on{opacity:.55}
 
 .eyebrow{
   font-family:var(--sans);

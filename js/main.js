@@ -12,7 +12,7 @@ const $ = s => document.querySelector(s);
 const ui = $('#ui');
 const ftop = $('#ftop'), fbot = $('#fbot');
 const chapNum = $('#chapNum'), chapName = $('#chapName');
-const wish = $('#wish'), cosmos = $('#cosmos');
+const wish = $('#wish'), cosmos = $('#cosmos'), curtain = $('#curtain');
 const flash = $('#flash'), rays = $('#rays'), constel = $('#constellation'), goldenC = $('#golden');
 
 Starfield.init();
@@ -81,7 +81,17 @@ document.addEventListener('click', e => { if (!e.target.closest('.cta,#audio,#re
 /* ---------- helpers UI ---------- */
 function clearUI() { ui.innerHTML = ''; }
 function fadeOutUI() { return new Promise(r => { ui.classList.add('ui-fade'); setTimeout(() => { ui.classList.remove('ui-fade'); r(); }, 900); }); }
-function chapter(num, name) { chapNum.textContent = num; chapName.textContent = name; }
+// transición breve entre capítulos: un respiro de la viñeta + el número/nombre
+// del capítulo se desvanecen y reaparecen, en vez de saltar de golpe
+function chapter(num, name) {
+  curtain.classList.add('on');
+  chapNum.classList.add('swap'); chapName.classList.add('swap');
+  setTimeout(() => {
+    chapNum.textContent = num; chapName.textContent = name;
+    chapNum.classList.remove('swap'); chapName.classList.remove('swap');
+    curtain.classList.remove('on');
+  }, REDUCED ? 10 : 260);
+}
 function makeButton(label) {
   const b = document.createElement('button'); b.className = 'cta';
   b.innerHTML = `<svg viewBox="0 0 220 60"><ellipse cx="110" cy="30" rx="105" ry="26"/><ellipse class="glow" cx="110" cy="30" rx="105" ry="26"/></svg>
